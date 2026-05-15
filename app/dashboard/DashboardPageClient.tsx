@@ -21,6 +21,18 @@ export default function DashboardPageClient({ school, total, lulus, tdkLulus, co
   const isDemo  = school.is_demo === true
   const [openModal, setOpenModal] = useState<'students' | 'settings' | 'upload' | null>(null)
   const [refreshing, setRefreshing] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const publicUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/${school?.slug}`
+    : `/${school?.slug}`
+
+  function handleCopy() {
+    navigator.clipboard.writeText(publicUrl).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
 
   function handleClose() {
     setOpenModal(null)
@@ -83,7 +95,7 @@ export default function DashboardPageClient({ school, total, lulus, tdkLulus, co
 
       {/* Header */}
       <div className="neo-brutal rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 p-5 text-white">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-3">
           <div>
             <p className="text-blue-200 text-xs font-bold uppercase tracking-wider mb-0.5">Dashboard</p>
             <h1 className="text-lg font-black leading-tight">{school?.nama_sekolah}</h1>
@@ -92,10 +104,41 @@ export default function DashboardPageClient({ school, total, lulus, tdkLulus, co
             className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 transition-colors px-3 py-2 rounded-xl text-xs font-bold text-white border border-white/30">
             Web Pengumuman
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
+              <path d="M7 7l10 10M7 17V7h10"/>
             </svg>
           </a>
         </div>
+
+        {/* URL Slug + Tombol Salin */}
+        <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-3 py-2">
+          <span className="text-blue-100 text-xs flex-1 truncate font-mono">{publicUrl}</span>
+          <button
+            onClick={handleCopy}
+            className="flex-shrink-0 flex items-center gap-1 bg-white/20 hover:bg-white/30 transition-colors px-2.5 py-1.5 rounded-lg text-xs font-bold text-white"
+          >
+            {copied ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+                Tersalin!
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                Salin
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Hint bagikan ke siswa */}
+        <p className="text-blue-200 text-xs mt-2">
+          📢 Bagikan alamat ini ke siswa untuk mengecek pengumuman kelulusan.
+        </p>
       </div>
 
       {/* Stats */}
@@ -139,6 +182,14 @@ export default function DashboardPageClient({ school, total, lulus, tdkLulus, co
             🌐 Web Pengumuman
           </a>
         </div>
+      </div>
+
+      {/* Hint uji coba countdown */}
+      <div className="flex items-start gap-3 bg-blue-50 border-2 border-blue-200 rounded-2xl px-4 py-3">
+        <span className="text-lg flex-shrink-0">🧪</span>
+        <p className="text-xs text-blue-700 font-medium">
+          Ingin menguji tampilan pengumuman? Ubah countdown ke tanggal/waktu yang sudah lewat di menu <strong>Pengaturan</strong>.
+        </p>
       </div>
 
       {/* Tombol Bantuan WA */}
