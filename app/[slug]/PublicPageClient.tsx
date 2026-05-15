@@ -214,7 +214,8 @@ export default function PublicPageClient({ school, studentCount }: Props) {
               🎓
             </div>
             <h3 className="text-xl font-black text-white mb-1">{result.nama}</h3>
-            <p className="text-sm text-blue-100 font-medium mb-3">Kelas {result.kelas}</p>
+            <p className="text-sm text-blue-100 font-medium mb-1">Kelas {result.kelas}</p>
+            <p className="text-sm text-white/90 font-bold mb-3">{school.nama_sekolah}</p>
 
             <div className={`inline-block px-5 py-2 rounded-full neo-brutal-sm font-black text-lg mb-4 ${
               result.status === 'LULUS' ? 'bg-green-400 text-gray-900' : 'bg-red-400 text-white'

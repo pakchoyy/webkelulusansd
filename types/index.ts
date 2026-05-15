@@ -9,6 +9,7 @@ export type School = {
   hero_title: string
   batch_label: string
   theme_primary: string
+  is_demo?: boolean
   created_at: string
 }
 
