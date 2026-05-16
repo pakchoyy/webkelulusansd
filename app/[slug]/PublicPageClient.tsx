@@ -241,6 +241,7 @@ export default function PublicPageClient({ school, studentCount }: Props) {
           </div>
         </div>
       )}
+
     </div>
   )
 }
