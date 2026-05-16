@@ -4,7 +4,9 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
 
-export default function DashboardNav({ namaSekolah, slug, isDemo }: { namaSekolah: string; slug: string; isDemo?: boolean }) {
+export default function DashboardNav({ namaSekolah, slug, isDemo, logoUrl }: { 
+  namaSekolah: string; slug: string; isDemo?: boolean; logoUrl?: string | null 
+}) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -25,7 +27,13 @@ export default function DashboardNav({ namaSekolah, slug, isDemo }: { namaSekola
       <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
         {/* Logo */}
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-lg">🎓</span>
+          <div className="w-8 h-8 rounded-full neo-brutal-sm bg-blue-100 overflow-hidden flex items-center justify-center flex-shrink-0">
+            {logoUrl ? (
+              <img src={logoUrl} alt="logo" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-sm">🎓</span>
+            )}
+          </div>
           <span className="font-black text-gray-900 text-sm truncate max-w-[160px]">{namaSekolah}</span>
         </div>
 

@@ -56,11 +56,12 @@ export default function SettingsModal({ school, onClose }: { school: School; onC
       const { error: uploadError } = await supabase.storage
         .from('logos').upload(path, logoFile, { upsert: true, contentType: logoFile.type })
       if (uploadError) { setMsg('❌ Gagal upload logo: ' + uploadError.message); setSaving(false); return }
-      logoUrl = supabase.storage.from('logos').getPublicUrl(path).data.publicUrl
+      const { data } = supabase.storage.from('logos').getPublicUrl(path)
+      logoUrl = `${data.publicUrl}?t=${Date.now()}`
     }
 
     const countdownAt = countdownDate && countdownTime
-      ? new Date(`${countdownDate}T${countdownTime}:00`).toISOString()
+      ? new Date(`${countdownDate}T${countdownTime}:00+07:00`).toISOString()
       : school.countdown_at
 
     // Demo: nama_sekolah dan slug TIDAK diupdate

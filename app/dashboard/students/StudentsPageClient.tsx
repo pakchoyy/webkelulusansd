@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Student } from '@/types'
 
@@ -11,10 +12,14 @@ const DEFAULT_MESSAGES = [
   'Kamu memiliki potensi luar biasa, gunakan dengan bijak.',
 ]
 
+import dynamic from 'next/dynamic'
+const UploadModal = dynamic(() => import('../modals/UploadModal'))
+
 export default function StudentsPageClient({ initialStudents, schoolId }: {
   initialStudents: Student[]; schoolId: string
 }) {
   const supabase = createClient()
+  const router = useRouter()
   const [students, setStudents] = useState<Student[]>(initialStudents)
   const [search, setSearch]   = useState('')
   const [loading, setLoading] = useState(false)
@@ -65,16 +70,28 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
     setStudents(prev => prev.filter(s => s.id !== id))
   }
 
+  const [showUpload, setShowUpload] = useState(false)
+
   const filtered = students.filter(s =>
     s.nama.toLowerCase().includes(search.toLowerCase()) || s.nisn.includes(search)
   )
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
       <div className="neo-brutal rounded-2xl bg-white p-5">
-        <h2 className="font-black text-gray-900 mb-4">
-          {editStudent ? `✏️ Edit: ${editStudent.nama}` : '➕ Tambah Siswa'}
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-black text-gray-900">
+            {editStudent ? `✏️ Edit: ${editStudent.nama}` : '➕ Tambah Siswa'}
+          </h2>
+          {!editStudent && (
+            <button
+              onClick={() => setShowUpload(true)}
+              className="bg-green-600 hover:bg-green-700 text-white text-[10px] font-black px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 shadow-sm shadow-green-100"
+            >
+              📥 Upload Excel Data Siswa
+            </button>
+          )}
+        </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -162,6 +179,7 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
           </div>
         )}
       </div>
+      {showUpload && <UploadModal schoolId={schoolId} onClose={() => { setShowUpload(false); router.refresh() }} />}
     </div>
   )
 }
