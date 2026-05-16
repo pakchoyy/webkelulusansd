@@ -194,9 +194,8 @@ export default function DashboardPageClient({ school, total, lulus, tdkLulus, co
               </svg>
               Gabung Grup Komunitas
             </a>
-            <p className="text-[11px] text-gray-500 font-medium leading-relaxed max-w-[280px] mx-auto">
-              Gabung komunitas pengguna aplikasi Bantu Guru Yuk. Saling bantu kurangi<br />
-              beban administrasi sekolah dan bebas usul ide fitur baru.
+            <p className="text-[11px] text-gray-500 font-medium leading-relaxed max-w-lg mx-auto">
+              Gabung komunitas pengguna aplikasi Bantu Guru Yuk. Saling bantu kurangi beban administrasi sekolah dan bebas usul ide fitur baru.
             </p>
           </div>
         </div>
