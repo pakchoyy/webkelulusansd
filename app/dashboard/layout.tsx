@@ -24,6 +24,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <main className="flex-1 max-w-2xl mx-auto w-full p-4 pt-6">
         {children}
       </main>
+
+      {/* Footer */}
+      <footer className="py-8 px-4 text-center bg-[#008080] text-white">
+        <div className="max-w-2xl mx-auto">
+          <p className="text-xs font-black uppercase tracking-widest mb-1">Portal Kelulusan SD</p>
+          <p className="text-[10px] font-bold opacity-90">
+            © 2026 Bantu Guru Yuk by <a href="https://tiktok.com/@pak.choyy" target="_blank" className="underline hover:text-yellow-300 transition-colors font-black">pak.choyy</a> • v 26.5.4
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }
