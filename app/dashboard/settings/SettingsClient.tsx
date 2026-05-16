@@ -6,29 +6,26 @@ import type { School } from '@/types'
 export default function SettingsClient({ school }: { school: School }) {
   const supabase = createClient()
 
-  // Form state — init dari data sekolah
   const [namaSekolah, setNamaSekolah]   = useState(school.nama_sekolah)
   const [tahunAjaran, setTahunAjaran]   = useState(school.tahun_ajaran)
   const [heroTitle, setHeroTitle]       = useState(school.hero_title)
   const [batchLabel, setBatchLabel]     = useState(school.batch_label)
   const [themePrimary, setThemePrimary] = useState(school.theme_primary)
 
-  // Countdown — pisah jadi date + time untuk input
+  // Fix: parse countdown_at dengan timezone WIB
   const cdDate = school.countdown_at
-    ? new Date(school.countdown_at).toISOString().slice(0, 10)
+    ? new Date(school.countdown_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' })
     : ''
   const cdTime = school.countdown_at
-    ? new Date(school.countdown_at).toTimeString().slice(0, 5)
+    ? new Date(school.countdown_at).toLocaleTimeString('en-GB', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit' })
     : '08:00'
   const [countdownDate, setCountdownDate] = useState(cdDate)
   const [countdownTime, setCountdownTime] = useState(cdTime)
 
-  // Logo
-  const [logoFile, setLogoFile]   = useState<File | null>(null)
+  const [logoFile, setLogoFile]       = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(school.logo_url)
-
-  const [saving, setSaving]   = useState(false)
-  const [msg, setMsg]         = useState('')
+  const [saving, setSaving]           = useState(false)
+  const [msg, setMsg]                 = useState('')
 
   function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
@@ -45,7 +42,6 @@ export default function SettingsClient({ school }: { school: School }) {
 
     let logoUrl = school.logo_url
 
-    // Upload logo jika ada file baru
     if (logoFile) {
       const ext = logoFile.name.split('.').pop()
       const path = `${school.id}/logo.${ext}`
@@ -62,21 +58,21 @@ export default function SettingsClient({ school }: { school: School }) {
       logoUrl = supabase.storage.from('logos').getPublicUrl(path).data.publicUrl
     }
 
-    // Gabungkan date + time jadi ISO timestamp
+    // Fix: paksa +07:00 agar tersimpan sebagai WIB bukan UTC
     const countdownAt = countdownDate && countdownTime
-      ? new Date(`${countdownDate}T${countdownTime}:00`).toISOString()
+      ? new Date(`${countdownDate}T${countdownTime}:00+07:00`).toISOString()
       : school.countdown_at
 
     const { error } = await supabase
       .from('schools')
       .update({
-        nama_sekolah: namaSekolah.trim(),
-        tahun_ajaran: tahunAjaran.trim(),
-        hero_title:   heroTitle.trim(),
-        batch_label:  batchLabel.trim(),
+        nama_sekolah:  namaSekolah.trim(),
+        tahun_ajaran:  tahunAjaran.trim(),
+        hero_title:    heroTitle.trim(),
+        batch_label:   batchLabel.trim(),
         theme_primary: themePrimary,
-        countdown_at: countdownAt,
-        logo_url:     logoUrl,
+        countdown_at:  countdownAt,
+        logo_url:      logoUrl,
       })
       .eq('id', school.id)
 

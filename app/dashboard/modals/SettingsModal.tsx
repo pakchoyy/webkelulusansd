@@ -16,8 +16,13 @@ export default function SettingsModal({ school, onClose }: { school: School; onC
 
   const DEFAULT_DATE = '2026-06-02'
   const DEFAULT_TIME = '07:00'
-  const cdDate = school.countdown_at ? new Date(school.countdown_at).toISOString().slice(0, 10) : DEFAULT_DATE
-  const cdTime = school.countdown_at ? new Date(school.countdown_at).toTimeString().slice(0, 5) : DEFAULT_TIME
+  // Fix: parse countdown_at dengan timezone WIB
+  const cdDate = school.countdown_at
+    ? new Date(school.countdown_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' })
+    : DEFAULT_DATE
+  const cdTime = school.countdown_at
+    ? new Date(school.countdown_at).toLocaleTimeString('en-GB', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit' })
+    : DEFAULT_TIME
   const [countdownDate, setCountdownDate] = useState(cdDate)
   const [countdownTime, setCountdownTime] = useState(cdTime)
   const [logoFile, setLogoFile]     = useState<File | null>(null)
@@ -49,7 +54,6 @@ export default function SettingsModal({ school, onClose }: { school: School; onC
     setSaving(true); setMsg('')
     let logoUrl = school.logo_url
 
-    // Upload logo hanya untuk non-demo
     if (logoFile && !isDemo) {
       const ext  = logoFile.name.split('.').pop()
       const path = `${school.id}/logo.${ext}`
@@ -60,11 +64,11 @@ export default function SettingsModal({ school, onClose }: { school: School; onC
       logoUrl = `${data.publicUrl}?t=${Date.now()}`
     }
 
+    // Fix: paksa +07:00 agar tersimpan sebagai WIB
     const countdownAt = countdownDate && countdownTime
       ? new Date(`${countdownDate}T${countdownTime}:00+07:00`).toISOString()
       : school.countdown_at
 
-    // Demo: nama_sekolah dan slug TIDAK diupdate
     const updatePayload = isDemo ? {
       tahun_ajaran:  tahunAjaran.trim(),
       hero_title:    heroTitle.trim(),
@@ -91,7 +95,6 @@ export default function SettingsModal({ school, onClose }: { school: School; onC
   return (
     <Modal title="⚙️ Pengaturan Sekolah" onClose={onClose}>
 
-      {/* Banner demo */}
       {isDemo && (
         <div className="mb-4 rounded-xl bg-yellow-50 border-2 border-yellow-300 p-3 flex items-start gap-2">
           <span className="text-lg flex-shrink-0">🔒</span>
@@ -106,7 +109,6 @@ export default function SettingsModal({ school, onClose }: { school: School; onC
 
       <form onSubmit={handleSave} className="space-y-3">
 
-        {/* Logo — disembunyikan di demo */}
         {!isDemo && (
           <div>
             <label className="text-xs font-bold text-gray-600 block mb-2">Logo Sekolah</label>
@@ -122,7 +124,6 @@ export default function SettingsModal({ school, onClose }: { school: School; onC
           </div>
         )}
 
-        {/* Nama Sekolah — dikunci di demo */}
         <div>
           <label className="text-xs font-bold text-gray-600 block mb-1">
             Nama Sekolah {isDemo && <span className="text-yellow-600 font-normal ml-1">🔒 dikunci</span>}
@@ -140,7 +141,6 @@ export default function SettingsModal({ school, onClose }: { school: School; onC
           />
         </div>
 
-        {/* Field bebas */}
         {[
           { label: 'Tahun Ajaran',  val: tahunAjaran, set: setTahunAjaran, placeholder: '2025/2026' },
           { label: 'Judul Halaman', val: heroTitle,   set: setHeroTitle,   placeholder: 'Pengumuman Kelulusan' },
@@ -153,7 +153,6 @@ export default function SettingsModal({ school, onClose }: { school: School; onC
           </div>
         ))}
 
-        {/* Tanggal & Waktu */}
         <div>
           <label className="text-xs font-bold text-gray-600 block mb-1">📅 Tanggal & Waktu Pengumuman</label>
           <div className="grid grid-cols-2 gap-2">
@@ -165,7 +164,6 @@ export default function SettingsModal({ school, onClose }: { school: School; onC
           <p className="text-[10px] text-gray-400 mt-1">Default: 2 Juni 2026, 07:00</p>
         </div>
 
-        {/* Warna Tema */}
         <div>
           <label className="text-xs font-bold text-gray-600 block mb-2">🎨 Warna Tema</label>
           <div className="rounded-xl p-3 mb-2 border-2 border-gray-100"
