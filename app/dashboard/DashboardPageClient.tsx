@@ -187,14 +187,14 @@ export default function DashboardPageClient({ school, total, lulus, tdkLulus, co
             <a 
               href="https://chat.whatsapp.com/I1Y7gcRSqNpBIMlU4P1MJd"
               target="_blank"
-              className="inline-flex items-center justify-center gap-2 bg-[#25d366] hover:bg-[#20ba56] text-white font-black px-6 py-3 rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-green-200 w-full"
+              className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-black px-6 py-3 rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-200 w-full"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
               Gabung Grup Komunitas
             </a>
-            <p className="text-[11px] text-gray-500 font-medium leading-relaxed max-w-xs mx-auto">
+            <p className="text-[11px] text-gray-500 font-medium leading-relaxed max-w-[280px] mx-auto">
               Gabung komunitas pengguna aplikasi Bantu Guru Yuk. Saling bantu kurangi<br />
               beban administrasi sekolah dan bebas usul ide fitur baru.
             </p>
