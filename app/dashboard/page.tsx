@@ -13,7 +13,8 @@ export default async function DashboardPage() {
   const { count: tdkLulus } = await supabase.from('students').select('id', { count: 'exact', head: true }).eq('school_id', user!.id).eq('status', 'TIDAK LULUS')
 
   const countdownDate = school?.countdown_at ? new Date(school.countdown_at).toLocaleString('id-ID', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    timeZone: 'Asia/Jakarta'
   }) : '-'
 
   return <DashboardPageClient school={school} total={total||0} lulus={lulus||0} tdkLulus={tdkLulus||0} countdownDate={countdownDate} />

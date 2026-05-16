@@ -210,8 +210,12 @@ export default function PublicPageClient({ school, studentCount }: Props) {
             </button>
             <div className={`absolute top-0 left-0 right-0 h-2 ${result.status === 'LULUS' ? 'bg-green-500' : 'bg-red-500'}`} />
 
-            <div className="w-20 h-20 mx-auto rounded-full neo-brutal-sm bg-gradient-to-br from-yellow-300 to-yellow-500 flex items-center justify-center mb-4 mt-3 text-3xl">
-              🎓
+            <div className="w-20 h-20 mx-auto rounded-full neo-brutal-sm bg-white overflow-hidden flex items-center justify-center mb-4 mt-3 text-3xl">
+              {school.logo_url ? (
+                <img src={school.logo_url} alt="logo" className="w-full h-full object-cover" />
+              ) : (
+                <span>🎓</span>
+              )}
             </div>
             <h3 className="text-xl font-black text-white mb-1">{result.nama}</h3>
             <p className="text-sm text-blue-100 font-medium mb-1">Kelas {result.kelas}</p>
