@@ -15,6 +15,89 @@ export default function PublicPageClient({ school, studentCount }: Props) {
   const [countdown, setCountdown] = useState({ days: '00', hours: '00', mins: '00', secs: '00', passed: false })
   const confettiRef = useRef<HTMLDivElement[]>([])
   const confettiIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
+  const [downloading, setDownloading] = useState(false)
+  const [downloadedImgUrl, setDownloadedImgUrl] = useState<string | null>(null)
+  const [showDownloadModal, setShowDownloadModal] = useState(false)
+
+  const loadHtml2Canvas = () => {
+    return new Promise<any>((resolve, reject) => {
+      if ((window as any).html2canvas) {
+        resolve((window as any).html2canvas)
+        return
+      }
+      const script = document.createElement('script')
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
+      script.async = true
+      script.onload = () => {
+        resolve((window as any).html2canvas)
+      }
+      script.onerror = () => {
+        reject(new Error('Failed to load html2canvas library'))
+      }
+      document.head.appendChild(script)
+    })
+  }
+
+  const handleDownloadImage = async () => {
+    if (!cardRef.current || !result) return
+    setDownloading(true)
+    try {
+      const html2canvas = await loadHtml2Canvas()
+      
+      const canvas = await html2canvas(cardRef.current, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: null,
+        logging: false,
+      })
+
+      const a5Canvas = document.createElement('canvas')
+      a5Canvas.width = 1240
+      a5Canvas.height = 1754
+      const ctx = a5Canvas.getContext('2d')
+      if (ctx) {
+        const grad = ctx.createLinearGradient(0, 0, 1240, 1754)
+        grad.addColorStop(0, '#60a5fa')
+        grad.addColorStop(0.5, '#93c5fd')
+        grad.addColorStop(1, '#3b82f6')
+        ctx.fillStyle = grad
+        ctx.fillRect(0, 0, 1240, 1754)
+
+        const pad = 50
+        const maxW = 1240 - pad * 2
+        const maxH = 1754 - pad * 2
+
+        let drawW = canvas.width
+        let drawH = canvas.height
+
+        const ratio = Math.min(maxW / drawW, maxH / drawH)
+        drawW = drawW * ratio
+        drawH = drawH * ratio
+
+        const x = (1240 - drawW) / 2
+        const y = (1754 - drawH) / 2
+
+        ctx.drawImage(canvas, x, y, drawW, drawH)
+
+        const dataUrl = a5Canvas.toDataURL('image/png')
+        setDownloadedImgUrl(dataUrl)
+        setShowDownloadModal(true)
+
+        const link = document.createElement('a')
+        link.href = dataUrl
+        link.download = `Kelulusan_${result.nama.replace(/\s+/g, '_')}_A5.png`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Gagal mengunduh gambar hasil kelulusan. Silakan coba lagi.')
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   useEffect(() => {
     function tick() {
@@ -203,8 +286,8 @@ export default function PublicPageClient({ school, studentCount }: Props) {
       {/* RESULT POPUP */}
       {showResult && result && (
         <div id="result-popup" className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="scale-in neo-brutal rounded-3xl bg-gradient-to-br from-blue-400 via-blue-300 to-blue-500 p-6 max-w-sm w-full text-center relative overflow-hidden">
-            <button onClick={closeResult}
+          <div ref={cardRef} className="scale-in neo-brutal rounded-3xl bg-gradient-to-br from-blue-400 via-blue-300 to-blue-500 p-6 max-w-sm w-full text-center relative overflow-hidden">
+            <button onClick={closeResult} data-html2canvas-ignore="true"
               className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/80 hover:bg-white flex items-center justify-center font-black text-gray-700 text-lg transition-colors">
               ✕
             </button>
@@ -212,7 +295,7 @@ export default function PublicPageClient({ school, studentCount }: Props) {
 
             <div className="w-20 h-20 mx-auto rounded-full neo-brutal-sm bg-white overflow-hidden flex items-center justify-center mb-4 mt-3 text-3xl">
               {school.logo_url ? (
-                <img src={school.logo_url} alt="logo" className="w-full h-full object-cover" />
+                <img src={school.logo_url} alt="logo" className="w-full h-full object-cover" crossOrigin="anonymous" />
               ) : (
                 <span>🎓</span>
               )}
@@ -234,9 +317,32 @@ export default function PublicPageClient({ school, studentCount }: Props) {
               </div>
             )}
 
-            <button onClick={() => window.print()}
-              className="neo-brutal-sm rounded-xl bg-white text-blue-600 font-bold px-5 py-3 w-full hover:bg-blue-50 transition-colors">
-              🖨️ CETAK HASIL
+            <button onClick={handleDownloadImage} disabled={downloading} data-html2canvas-ignore="true"
+              className="neo-brutal-sm rounded-xl bg-white text-blue-600 font-bold px-5 py-3 w-full hover:bg-blue-50 transition-colors disabled:opacity-60">
+              {downloading ? '⌛ MEMPROSES...' : '🖨️ CETAK HASIL'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* DOWNLOAD SUCCESS MODAL */}
+      {showDownloadModal && downloadedImgUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="scale-in neo-brutal rounded-3xl bg-white p-6 max-w-md w-full text-center relative">
+            <button onClick={() => { setShowDownloadModal(false); setDownloadedImgUrl(null); }}
+              className="absolute top-3 right-3 w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-black text-gray-700 text-lg transition-colors">
+              ✕
+            </button>
+            <h4 className="text-lg font-black text-gray-900 mb-2">🎉 Gambar Berhasil Dibuat!</h4>
+            <p className="text-xs text-gray-600 mb-4 px-4">
+              Jika unduhan tidak berjalan otomatis di HP Anda, silakan <strong>tekan lama (sentuh & tahan) gambar di bawah ini</strong> lalu pilih <strong>"Simpan Gambar"</strong> / <strong>"Download Gambar"</strong>.
+            </p>
+            <div className="neo-brutal rounded-2xl overflow-hidden max-h-[50vh] mb-4 bg-gray-100 flex items-center justify-center">
+              <img src={downloadedImgUrl} alt="Hasil Kelulusan A5" className="max-w-full max-h-[50vh] object-contain" />
+            </div>
+            <button onClick={() => { setShowDownloadModal(false); setDownloadedImgUrl(null); }}
+              className="neo-brutal-sm rounded-xl bg-gray-900 text-white font-bold px-5 py-3 w-full hover:bg-gray-800 transition-colors">
+              Tutup
             </button>
           </div>
         </div>
