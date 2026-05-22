@@ -28,6 +28,7 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
 
   const sklInputRef = useRef<HTMLInputElement>(null)
   const [uploadingSklFor, setUploadingSklFor] = useState<string | null>(null)
+  const [successUploadedName, setSuccessUploadedName] = useState<string | null>(null)
 
   function triggerSklUpload(studentId: string) {
     setUploadingSklFor(studentId)
@@ -80,8 +81,8 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
         alert('Gagal memperbarui link SKL di database: ' + dbError.message)
       } else {
         setStudents(prev => prev.map(s => s.id === studentId ? { ...s, skl_url: sklUrl } : s))
-        setMsg('✅ SKL berhasil diunggah!')
-        setTimeout(() => setMsg(''), 3000)
+        const std = students.find(s => s.id === studentId)
+        setSuccessUploadedName(std ? std.nama : 'Siswa')
       }
     } catch (err: any) {
       alert('Terjadi kesalahan: ' + err.message)
@@ -269,21 +270,20 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
                   {s.status === 'LULUS' && (
                     <div className="flex items-center gap-1">
                       {s.skl_url ? (
-                        <div className="flex items-center gap-0.5 bg-green-50 border border-green-200 rounded-lg p-0.5">
+                        <div className="flex items-center gap-1 bg-green-100 border-2 border-green-400 rounded-xl px-2.5 py-1.5 neo-brutal-sm">
                           <a href={s.skl_url} target="_blank" rel="noopener noreferrer" title="Lihat SKL"
-                            className="text-green-600 hover:text-green-800 p-1 rounded transition-colors text-xs font-bold flex items-center gap-0.5">
-                            📄 <span className="hidden sm:inline">SKL</span>
+                            className="text-green-800 hover:text-green-950 text-xs font-black flex items-center gap-1">
+                            📄 Lihat SKL
                           </a>
                           <button onClick={() => deleteSkl(s.id, s.skl_url!)} title="Hapus SKL"
-                            className="text-red-400 hover:text-red-600 p-1 rounded transition-colors text-xs font-black">
+                            className="text-red-500 hover:text-red-700 font-black text-sm ml-1 transition-colors">
                             ✕
                           </button>
                         </div>
                       ) : (
                         <button onClick={() => triggerSklUpload(s.id)} disabled={uploadingSklFor !== null || loading}
-                          title="Upload SKL (PDF/Gambar)"
-                          className="text-gray-400 hover:text-blue-600 p-1.5 rounded-lg hover:bg-blue-50 transition-colors text-xs border border-dashed border-gray-300 flex items-center gap-1">
-                          {uploadingSklFor === s.id ? '⌛' : '📤'} <span className="hidden sm:inline">SKL</span>
+                          className="bg-blue-50 border-2 border-gray-900 px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1 text-blue-700 hover:bg-blue-100 transition-colors neo-brutal-sm">
+                          {uploadingSklFor === s.id ? '⌛' : '📤'} Upload SKL
                         </button>
                       )}
                     </div>
@@ -301,6 +301,25 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
       </div>
       {showUpload && <UploadModal schoolId={schoolId} onClose={() => { setShowUpload(false); router.refresh() }} />}
       <input type="file" ref={sklInputRef} onChange={handleSklFileChange} accept=".pdf,image/*" className="hidden" />
+
+      {/* SUCCESS UPLOAD POPUP MODAL */}
+      {successUploadedName && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="scale-in neo-brutal rounded-3xl bg-white p-6 max-w-sm w-full text-center relative">
+            <div className="w-16 h-16 mx-auto rounded-full neo-brutal bg-green-100 flex items-center justify-center mb-4 mt-2">
+              <span className="text-3xl">🎉</span>
+            </div>
+            <h3 className="text-xl font-black text-gray-900 mb-2">Unggah Berhasil!</h3>
+            <p className="text-sm text-gray-600 mb-5 leading-relaxed">
+              Berkas SKL untuk siswa <strong className="text-blue-600">{successUploadedName}</strong> telah berhasil diunggah dan siap diunduh oleh siswa!
+            </p>
+            <button onClick={() => setSuccessUploadedName(null)}
+              className="neo-brutal-sm rounded-xl bg-gray-900 text-white font-bold px-5 py-3 w-full hover:bg-gray-800 transition-all hover:scale-102 active:scale-98">
+              Tutup
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
