@@ -19,6 +19,7 @@ export default function PublicPageClient({ school, studentCount }: Props) {
   const [downloading, setDownloading] = useState(false)
   const [downloadedImgUrl, setDownloadedImgUrl] = useState<string | null>(null)
   const [showDownloadModal, setShowDownloadModal] = useState(false)
+  const [downloadingSkl, setDownloadingSkl] = useState(false)
 
   const loadHtml2Canvas = () => {
     return new Promise<any>((resolve, reject) => {
@@ -93,9 +94,41 @@ export default function PublicPageClient({ school, studentCount }: Props) {
       }
     } catch (err) {
       console.error(err)
-      alert('Gagal mengunduh gambar hasil kelulusan. Silakan coba lagi.')
+      alert('Gagal mengunggah gambar hasil kelulusan. Silakan coba lagi.')
     } finally {
       setDownloading(false)
+    }
+  }
+
+  const handleDownloadSkl = async (sklUrl: string, studentName: string) => {
+    if (downloadingSkl) return
+    setDownloadingSkl(true)
+    try {
+      const response = await fetch(sklUrl)
+      if (!response.ok) throw new Error('Gagal mengunduh berkas dari server.')
+      const blob = await response.blob()
+
+      // Detect original file extension
+      let ext = 'pdf'
+      const contentType = response.headers.get('content-type')
+      if (contentType && contentType.includes('image')) {
+        ext = contentType.split('/').pop() || 'png'
+      }
+
+      const blobUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = `SKL_${studentName.replace(/\s+/g, '_')}.${ext}`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(blobUrl)
+    } catch (err) {
+      console.error(err)
+      // Fallback: open in new tab if fetch fails due to CORS or offline network
+      window.open(sklUrl, '_blank')
+    } finally {
+      setDownloadingSkl(false)
     }
   }
 
@@ -323,10 +356,10 @@ export default function PublicPageClient({ school, studentCount }: Props) {
             </button>
 
             {result.skl_url && (
-              <a href={result.skl_url} target="_blank" rel="noopener noreferrer" data-html2canvas-ignore="true"
-                className="mt-2 inline-flex items-center justify-center gap-2 neo-brutal-sm rounded-xl bg-yellow-300 text-gray-900 font-bold px-5 py-3 w-full hover:bg-yellow-400 transition-all hover:scale-[1.02] active:scale-[0.98]">
-                📄 CETAK / UNDUH SKL
-              </a>
+              <button onClick={() => handleDownloadSkl(result.skl_url!, result.nama)} disabled={downloadingSkl} data-html2canvas-ignore="true"
+                className="mt-2 inline-flex items-center justify-center gap-2 neo-brutal-sm rounded-xl bg-yellow-300 text-gray-900 font-bold px-5 py-3 w-full hover:bg-yellow-400 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60">
+                {downloadingSkl ? '⌛ MENGUNDUH...' : '📄 CETAK / UNDUH SKL'}
+              </button>
             )}
           </div>
         </div>
