@@ -279,7 +279,7 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
                           <button onClick={() => setShowDeleteConfirmFor({ id: s.id, name: s.nama, url: s.skl_url! })}
                             className="bg-red-50 border-2 border-red-500 px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1 text-red-700 hover:bg-red-100 transition-colors neo-brutal-sm"
                             title="Hapus SKL">
-                            🗑️ Hapus
+                            🗑️ Hapus SKL
                           </button>
                         </>
                       ) : (
