@@ -321,6 +321,13 @@ export default function PublicPageClient({ school, studentCount }: Props) {
               className="neo-brutal-sm rounded-xl bg-white text-blue-600 font-bold px-5 py-3 w-full hover:bg-blue-50 transition-colors disabled:opacity-60">
               {downloading ? '⌛ MEMPROSES...' : '🖨️ CETAK HASIL'}
             </button>
+
+            {result.skl_url && (
+              <a href={result.skl_url} target="_blank" rel="noopener noreferrer" data-html2canvas-ignore="true"
+                className="mt-2 inline-flex items-center justify-center gap-2 neo-brutal-sm rounded-xl bg-yellow-300 text-gray-900 font-bold px-5 py-3 w-full hover:bg-yellow-400 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                📄 CETAK / UNDUH SKL
+              </a>
+            )}
           </div>
         </div>
       )}

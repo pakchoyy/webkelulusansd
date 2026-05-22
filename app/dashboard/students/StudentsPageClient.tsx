@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Student } from '@/types'
@@ -25,6 +25,102 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
   const [loading, setLoading] = useState(false)
   const [msg, setMsg]         = useState('')
   const [editStudent, setEditStudent] = useState<Student | null>(null)
+
+  const sklInputRef = useRef<HTMLInputElement>(null)
+  const [uploadingSklFor, setUploadingSklFor] = useState<string | null>(null)
+
+  function triggerSklUpload(studentId: string) {
+    setUploadingSklFor(studentId)
+    setTimeout(() => {
+      sklInputRef.current?.click()
+    }, 50)
+  }
+
+  async function handleSklFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !uploadingSklFor) return
+
+    // Limit to 3MB
+    if (file.size > 3 * 1024 * 1024) {
+      alert('Ukuran file maksimal adalah 3MB')
+      setUploadingSklFor(null)
+      if (sklInputRef.current) sklInputRef.current.value = ''
+      return
+    }
+
+    const studentId = uploadingSklFor
+    setLoading(true)
+
+    try {
+      const ext = file.name.split('.').pop()
+      const path = `${schoolId}/${studentId}_skl.${ext}`
+
+      // Upload file to Supabase storage 'skls' bucket
+      const { error: uploadError } = await supabase.storage
+        .from('skls')
+        .upload(path, file, { upsert: true, contentType: file.type })
+
+      if (uploadError) {
+        alert('Gagal mengunggah file SKL: ' + uploadError.message)
+        setLoading(false)
+        setUploadingSklFor(null)
+        if (sklInputRef.current) sklInputRef.current.value = ''
+        return
+      }
+
+      const sklUrl = supabase.storage.from('skls').getPublicUrl(path).data.publicUrl
+
+      // Update skl_url field in the database
+      const { error: dbError } = await supabase.from('students')
+        .update({ skl_url: sklUrl })
+        .eq('id', studentId)
+        .eq('school_id', schoolId)
+
+      if (dbError) {
+        alert('Gagal memperbarui link SKL di database: ' + dbError.message)
+      } else {
+        setStudents(prev => prev.map(s => s.id === studentId ? { ...s, skl_url: sklUrl } : s))
+        setMsg('✅ SKL berhasil diunggah!')
+        setTimeout(() => setMsg(''), 3000)
+      }
+    } catch (err: any) {
+      alert('Terjadi kesalahan: ' + err.message)
+    } finally {
+      setLoading(false)
+      setUploadingSklFor(null)
+      if (sklInputRef.current) sklInputRef.current.value = ''
+    }
+  }
+
+  async function deleteSkl(studentId: string, sklUrl: string) {
+    if (!confirm('Hapus SKL siswa ini?')) return
+    setLoading(true)
+
+    try {
+      const urlParts = sklUrl.split('/skls/')
+      if (urlParts.length > 1) {
+        const path = urlParts[1]
+        await supabase.storage.from('skls').remove([path])
+      }
+
+      const { error: dbError } = await supabase.from('students')
+        .update({ skl_url: null })
+        .eq('id', studentId)
+        .eq('school_id', schoolId)
+
+      if (dbError) {
+        alert('Gagal menghapus link SKL dari database: ' + dbError.message)
+      } else {
+        setStudents(prev => prev.map(s => s.id === studentId ? { ...s, skl_url: null } : s))
+        setMsg('🗑️ SKL berhasil dihapus!')
+        setTimeout(() => setMsg(''), 3000)
+      }
+    } catch (err: any) {
+      alert('Terjadi kesalahan saat menghapus SKL: ' + err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const [nisn, setNisn]     = useState('')
   const [nama, setNama]     = useState('')
@@ -168,7 +264,31 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
                     <span className={s.status === 'LULUS' ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{s.status}</span>
                   </p>
                 </div>
-                <div className="flex gap-1 ml-2">
+                <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                  {/* SKL Status / Upload Button */}
+                  {s.status === 'LULUS' && (
+                    <div className="flex items-center gap-1">
+                      {s.skl_url ? (
+                        <div className="flex items-center gap-0.5 bg-green-50 border border-green-200 rounded-lg p-0.5">
+                          <a href={s.skl_url} target="_blank" rel="noopener noreferrer" title="Lihat SKL"
+                            className="text-green-600 hover:text-green-800 p-1 rounded transition-colors text-xs font-bold flex items-center gap-0.5">
+                            📄 <span className="hidden sm:inline">SKL</span>
+                          </a>
+                          <button onClick={() => deleteSkl(s.id, s.skl_url!)} title="Hapus SKL"
+                            className="text-red-400 hover:text-red-600 p-1 rounded transition-colors text-xs font-black">
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <button onClick={() => triggerSklUpload(s.id)} disabled={uploadingSklFor !== null || loading}
+                          title="Upload SKL (PDF/Gambar)"
+                          className="text-gray-400 hover:text-blue-600 p-1.5 rounded-lg hover:bg-blue-50 transition-colors text-xs border border-dashed border-gray-300 flex items-center gap-1">
+                          {uploadingSklFor === s.id ? '⌛' : '📤'} <span className="hidden sm:inline">SKL</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+
                   <button onClick={() => fillEdit(s)}
                     className="text-blue-400 hover:text-blue-600 p-1.5 rounded-lg hover:bg-blue-50 transition-colors">✏️</button>
                   <button onClick={() => deleteStudent(s.id)}
@@ -180,6 +300,7 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
         )}
       </div>
       {showUpload && <UploadModal schoolId={schoolId} onClose={() => { setShowUpload(false); router.refresh() }} />}
+      <input type="file" ref={sklInputRef} onChange={handleSklFileChange} accept=".pdf,image/*" className="hidden" />
     </div>
   )
 }

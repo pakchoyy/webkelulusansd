@@ -21,6 +21,7 @@ export type Student = {
   kelas: string
   status: 'LULUS' | 'TIDAK LULUS'
   pesan: string
+  skl_url?: string | null
   created_at: string
 }
 
