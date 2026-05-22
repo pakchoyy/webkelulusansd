@@ -29,6 +29,8 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
   const sklInputRef = useRef<HTMLInputElement>(null)
   const [uploadingSklFor, setUploadingSklFor] = useState<string | null>(null)
   const [successUploadedName, setSuccessUploadedName] = useState<string | null>(null)
+  const [showDeleteConfirmFor, setShowDeleteConfirmFor] = useState<{ id: string; name: string; url: string } | null>(null)
+  const [successDeletedName, setSuccessDeletedName] = useState<string | null>(null)
 
   function triggerSklUpload(studentId: string) {
     setUploadingSklFor(studentId)
@@ -93,9 +95,9 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
     }
   }
 
-  async function deleteSkl(studentId: string, sklUrl: string) {
-    if (!confirm('Hapus SKL siswa ini?')) return
+  async function executeDeleteSkl(studentId: string, sklUrl: string, studentName: string) {
     setLoading(true)
+    setShowDeleteConfirmFor(null)
 
     try {
       const urlParts = sklUrl.split('/skls/')
@@ -113,8 +115,7 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
         alert('Gagal menghapus link SKL dari database: ' + dbError.message)
       } else {
         setStudents(prev => prev.map(s => s.id === studentId ? { ...s, skl_url: null } : s))
-        setMsg('🗑️ SKL berhasil dihapus!')
-        setTimeout(() => setMsg(''), 3000)
+        setSuccessDeletedName(studentName)
       }
     } catch (err: any) {
       alert('Terjadi kesalahan saat menghapus SKL: ' + err.message)
@@ -268,18 +269,19 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
                 <div className="flex items-center gap-2 ml-2 flex-shrink-0">
                   {/* SKL Status / Upload Button */}
                   {s.status === 'LULUS' && (
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                       {s.skl_url ? (
-                        <div className="flex items-center gap-1 bg-green-100 border-2 border-green-400 rounded-xl px-2.5 py-1.5 neo-brutal-sm">
+                        <>
                           <a href={s.skl_url} target="_blank" rel="noopener noreferrer" title="Lihat SKL"
-                            className="text-green-800 hover:text-green-950 text-xs font-black flex items-center gap-1">
+                            className="bg-green-100 border-2 border-green-500 px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1 text-green-800 hover:bg-green-200 transition-colors neo-brutal-sm">
                             📄 Lihat SKL
                           </a>
-                          <button onClick={() => deleteSkl(s.id, s.skl_url!)} title="Hapus SKL"
-                            className="text-red-500 hover:text-red-700 font-black text-sm ml-1 transition-colors">
-                            ✕
+                          <button onClick={() => setShowDeleteConfirmFor({ id: s.id, name: s.nama, url: s.skl_url! })}
+                            className="bg-red-50 border-2 border-red-500 px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1 text-red-700 hover:bg-red-100 transition-colors neo-brutal-sm"
+                            title="Hapus SKL">
+                            🗑️ Hapus
                           </button>
-                        </div>
+                        </>
                       ) : (
                         <button onClick={() => triggerSklUpload(s.id)} disabled={uploadingSklFor !== null || loading}
                           className="bg-blue-50 border-2 border-gray-900 px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1 text-blue-700 hover:bg-blue-100 transition-colors neo-brutal-sm">
@@ -305,16 +307,60 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
       {/* SUCCESS UPLOAD POPUP MODAL */}
       {successUploadedName && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="scale-in neo-brutal rounded-3xl bg-white p-6 max-w-sm w-full text-center relative">
+          <div className="scale-in neo-brutal rounded-3xl bg-white p-6 max-w-sm w-full text-center relative border-2 border-green-500">
             <div className="w-16 h-16 mx-auto rounded-full neo-brutal bg-green-100 flex items-center justify-center mb-4 mt-2">
-              <span className="text-3xl">🎉</span>
+              <span className="text-3xl">📄</span>
             </div>
-            <h3 className="text-xl font-black text-gray-900 mb-2">Unggah Berhasil!</h3>
+            <h3 className="text-xl font-black text-green-700 mb-2">Unggah Berhasil!</h3>
             <p className="text-sm text-gray-600 mb-5 leading-relaxed">
               Berkas SKL untuk siswa <strong className="text-blue-600">{successUploadedName}</strong> telah berhasil diunggah dan siap diunduh oleh siswa!
             </p>
             <button onClick={() => setSuccessUploadedName(null)}
-              className="neo-brutal-sm rounded-xl bg-gray-900 text-white font-bold px-5 py-3 w-full hover:bg-gray-800 transition-all hover:scale-102 active:scale-98">
+              className="neo-brutal-sm rounded-xl bg-red-600 text-white font-bold px-5 py-3 w-full hover:bg-red-700 transition-all hover:scale-102 active:scale-98">
+              Tutup
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRM DELETE POPUP MODAL */}
+      {showDeleteConfirmFor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="scale-in neo-brutal rounded-3xl bg-white p-6 max-w-sm w-full text-center relative border-2 border-red-500">
+            <div className="w-16 h-16 mx-auto rounded-full neo-brutal bg-red-100 flex items-center justify-center mb-4 mt-2">
+              <span className="text-3xl">🗑️</span>
+            </div>
+            <h3 className="text-xl font-black text-red-700 mb-2">Hapus Berkas SKL?</h3>
+            <p className="text-sm text-gray-600 mb-5 leading-relaxed">
+              Apakah Anda yakin ingin menghapus berkas SKL untuk siswa <strong className="text-blue-600">{showDeleteConfirmFor.name}</strong>? Tindakan ini tidak dapat dibatalkan.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setShowDeleteConfirmFor(null)}
+                className="flex-1 neo-brutal-sm rounded-xl bg-white text-gray-900 border-2 border-black font-bold px-4 py-3 hover:bg-gray-100 transition-colors">
+                Batal
+              </button>
+              <button onClick={() => executeDeleteSkl(showDeleteConfirmFor.id, showDeleteConfirmFor.url, showDeleteConfirmFor.name)}
+                className="flex-1 neo-brutal-sm rounded-xl bg-red-600 text-white font-bold px-4 py-3 hover:bg-red-700 transition-colors">
+                Hapus Berkas
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SUCCESS DELETE POPUP MODAL */}
+      {successDeletedName && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="scale-in neo-brutal rounded-3xl bg-white p-6 max-w-sm w-full text-center relative border-2 border-red-500">
+            <div className="w-16 h-16 mx-auto rounded-full neo-brutal bg-red-100 flex items-center justify-center mb-4 mt-2">
+              <span className="text-3xl">🗑️</span>
+            </div>
+            <h3 className="text-xl font-black text-red-700 mb-2">Dihapus!</h3>
+            <p className="text-sm text-gray-600 mb-5 leading-relaxed">
+              Berkas SKL untuk siswa <strong className="text-blue-600">{successDeletedName}</strong> telah berhasil dihapus secara permanen dari server.
+            </p>
+            <button onClick={() => setSuccessDeletedName(null)}
+              className="neo-brutal-sm rounded-xl bg-white text-gray-900 border-2 border-black font-bold px-5 py-3 w-full hover:bg-gray-100 transition-all hover:scale-102 active:scale-98">
               Tutup
             </button>
           </div>
