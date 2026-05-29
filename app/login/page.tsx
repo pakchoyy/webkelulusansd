@@ -17,12 +17,23 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      setError('Email atau password salah.')
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          setError('Email atau password salah.')
+        } else if (error.message.includes('Email not confirmed')) {
+          setError('Email belum dikonfirmasi. Cek inbox email kamu.')
+        } else {
+          setError('Terjadi kesalahan. Silakan coba lagi.')
+        }
+        setLoading(false)
+      } else {
+        router.push('/dashboard')
+      }
+    } catch {
+      setError('Gagal terhubung ke server. Periksa koneksi internet.')
       setLoading(false)
-    } else {
-      router.push('/dashboard')
     }
   }
 
@@ -59,6 +70,11 @@ export default function LoginPage() {
               required
               className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-sm focus:outline-none focus:border-blue-400"
             />
+          </div>
+          <div className="flex justify-end">
+            <Link href="/auth/forgot-password" className="text-xs text-blue-600 hover:underline font-medium">
+              Lupa Password?
+            </Link>
           </div>
           {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
           <button

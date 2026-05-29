@@ -21,10 +21,15 @@ npm run dev
 1. Buat project baru di [supabase.com](https://supabase.com)
 2. Buka **SQL Editor** → paste isi file `supabase/setup.sql` → Run
 3. Buka **Storage** → New bucket → nama: `logos`, public: ON, max size: 1MB
-4. Ambil credentials dari **Settings → API**:
+4. Buka **Storage** → New bucket → nama: `skls`, public: ON, max size: 3MB
+5. Ambil credentials dari **Settings → API**:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
+6. **Setup Email Template** (untuk reset password):
+   - Buka **Authentication → Email Templates**
+   - Edit template "Reset Password"
+   - Pastikan URL redirect mengarah ke: `https://domain-kamu.vercel.app/auth/callback`
 
 ---
 
@@ -39,7 +44,10 @@ npm run dev
    SUPABASE_SERVICE_ROLE_KEY=...
    ADMIN_SECRET=rahasia-kamu-untuk-generate-kode
    ```
-4. Deploy → otomatis
+4. **Supabase Auth Settings** (untuk reset password):
+   - Buka Supabase Dashboard → Authentication → URL Configuration
+   - Tambahkan `https://domain-kamu.vercel.app` ke **Redirect URLs**
+5. Deploy → otomatis
 
 ---
 
@@ -77,21 +85,27 @@ https://domain-kamu.vercel.app/register
 
 ```
 app/
-├── [slug]/          # Halaman publik cek NISN
-├── login/           # Login sekolah
-├── register/        # Daftar dengan kode aktivasi
+├── [slug]/              # Halaman publik cek NISN
+├── login/               # Login sekolah
+├── b2g4y10-enroll/      # Daftar dengan kode aktivasi
+├── auth/
+│   ├── forgot-password/ # Form lupa password
+│   ├── reset-password/  # Reset password (legacy)
+│   ├── update-password/ # Update password baru
+│   └── callback/        # Auth callback handler
 ├── dashboard/
-│   ├── page.tsx     # Beranda dashboard
-│   ├── students/    # Kelola siswa
-│   ├── upload/      # Upload Excel massal
-│   └── settings/    # Pengaturan sekolah + logo
+│   ├── page.tsx         # Beranda dashboard
+│   ├── students/        # Kelola siswa
+│   ├── upload/          # Upload Excel massal
+│   └── settings/        # Pengaturan sekolah + logo
 └── api/
-    └── generate-code/ # Generate kode aktivasi
+    ├── generate-code/   # Generate kode aktivasi
+    └── register-school/ # Register sekolah baru
 
 lib/supabase/
-├── client.ts        # Browser client
-└── server.ts        # Server client + service role
+├── client.ts            # Browser client
+└── server.ts            # Server client + service role
 
 supabase/
-└── setup.sql        # SQL setup (jalankan sekali di Supabase)
+└── setup.sql            # SQL setup (jalankan sekali di Supabase)
 ```
