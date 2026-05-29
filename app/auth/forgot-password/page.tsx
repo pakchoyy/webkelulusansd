@@ -21,7 +21,13 @@ export default function ForgotPasswordPage() {
     })
 
     if (error) {
-      setError(error.message || 'Gagal mengirim email reset password.')
+      if (error.message.includes('invalid')) {
+        setError('Format email tidak valid. Gunakan email yang benar.')
+      } else if (error.message.includes('not found') || error.message.includes('Invalid')) {
+        setError('Email tidak terdaftar di sistem kami.')
+      } else {
+        setError('Gagal mengirim email. Silakan coba lagi.')
+      }
       setLoading(false)
     } else {
       setSuccess(true)
