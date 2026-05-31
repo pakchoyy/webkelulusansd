@@ -7,17 +7,20 @@ export const revalidate = 30
 
 type Props = { params: Promise<{ slug: string }> }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params
+async function getSchool(slug: string) {
   const supabase = await createClient()
-  const { data: school } = await supabase
+  const { data } = await supabase
     .from('schools')
-    .select('nama_sekolah, hero_title, batch_label')
+    .select('id, nama_sekolah, slug, logo_url, tahun_ajaran, countdown_at, hero_title, batch_label, theme_primary')
     .eq('slug', slug)
     .single()
+  return data
+}
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
+  const school = await getSchool(slug)
   if (!school) return {}
-
   return {
     title: `${school.hero_title} — ${school.nama_sekolah}`,
     description: `Pengumuman kelulusan ${school.batch_label} ${school.nama_sekolah}. Cek hasil kelulusan di sini.`,
@@ -31,19 +34,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SchoolPage({ params }: Props) {
   const { slug } = await params
-  const supabase = await createClient()
-  const { data: school } = await supabase
-    .from('schools')
-    .select('*')
-    .eq('slug', slug)
-    .single()
-
+  const school = await getSchool(slug)
   if (!school) notFound()
 
+  const supabase = await createClient()
   const { count } = await supabase
     .from('students')
     .select('id', { count: 'exact', head: true })
-    .eq('school_id', school.id)
+    .eq('school_id', school!.id)
 
-  return <PublicPageClient school={school} studentCount={count || 0} />
+  return <PublicPageClient school={school!} studentCount={count || 0} />
 }
