@@ -29,6 +29,8 @@ export default function PublicPageClient({ school, studentCount }: Props) {
       }
       const script = document.createElement('script')
       script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
+      script.integrity = 'sha256-puJRQ8tLqjEd/P2mamIDMhi3YZdO0/YzJwR8sGQDcOQ='
+      script.crossOrigin = 'anonymous'
       script.async = true
       script.onload = () => {
         resolve((window as any).html2canvas)

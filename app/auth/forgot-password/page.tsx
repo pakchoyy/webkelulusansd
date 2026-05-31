@@ -20,8 +20,6 @@ export default function ForgotPasswordPage() {
       redirectTo: `${window.location.origin}/auth/callback`,
     })
 
-    console.log('Reset password result:', { error })
-
     if (error) {
       if (error.message.includes('invalid') || error.message.includes('Invalid')) {
         setError('Email tidak valid atau belum terdaftar.')

@@ -21,6 +21,7 @@ CREATE TABLE schools (
   slug          TEXT UNIQUE NOT NULL,
   email         TEXT NOT NULL,
   logo_url      TEXT,
+  is_demo       BOOLEAN DEFAULT FALSE,
   tahun_ajaran  TEXT DEFAULT '2025/2026',
   countdown_at  TIMESTAMPTZ DEFAULT NOW() + INTERVAL '30 days',
   hero_title    TEXT DEFAULT 'Pengumuman Kelulusan',
@@ -38,6 +39,7 @@ CREATE TABLE students (
   kelas      TEXT NOT NULL,
   status     TEXT NOT NULL CHECK (status IN ('LULUS','TIDAK LULUS')),
   pesan      TEXT DEFAULT '',
+  skl_url    TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE (school_id, nisn)
 );
@@ -90,6 +92,52 @@ CREATE POLICY "students_owner_write" ON students
 -- Public: YES
 -- Max file size: 1MB
 -- Allowed MIME: image/png, image/jpeg, image/webp
+
+-- ============================================================
+-- STORAGE BUCKETS
+-- ============================================================
+-- Jalankan ini di SQL Editor untuk buat buckets:
+
+-- Bucket logos (untuk logo sekolah)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('logos', 'logos', true, 1048576, ARRAY['image/png', 'image/jpeg', 'image/webp'])
+ON CONFLICT (id) DO NOTHING;
+
+-- Bucket skls (untuk file SKL siswa)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('skls', 'skls', true, 3145728, ARRAY['application/pdf', 'image/png', 'image/jpeg', 'image/webp'])
+ON CONFLICT (id) DO NOTHING;
+
+-- Storage policies: authenticated users can upload to their own folder
+CREATE POLICY "logos_insert_owner" ON storage.objects
+  FOR INSERT WITH CHECK (
+    bucket_id = 'logos' AND auth.uid()::text = (string_to_array(name, '/'))[1]
+  );
+
+CREATE POLICY "logos_update_owner" ON storage.objects
+  FOR UPDATE USING (
+    bucket_id = 'logos' AND auth.uid()::text = (string_to_array(name, '/'))[1]
+  );
+
+CREATE POLICY "logos_delete_owner" ON storage.objects
+  FOR DELETE USING (
+    bucket_id = 'logos' AND auth.uid()::text = (string_to_array(name, '/'))[1]
+  );
+
+CREATE POLICY "skls_insert_owner" ON storage.objects
+  FOR INSERT WITH CHECK (
+    bucket_id = 'skls' AND auth.uid()::text = (string_to_array(name, '/'))[1]
+  );
+
+CREATE POLICY "skls_update_owner" ON storage.objects
+  FOR UPDATE USING (
+    bucket_id = 'skls' AND auth.uid()::text = (string_to_array(name, '/'))[1]
+  );
+
+CREATE POLICY "skls_delete_owner" ON storage.objects
+  FOR DELETE USING (
+    bucket_id = 'skls' AND auth.uid()::text = (string_to_array(name, '/'))[1]
+  );
 
 -- ============================================================
 -- CONTOH INSERT ACTIVATION CODE (jalankan tiap ada pembeli)

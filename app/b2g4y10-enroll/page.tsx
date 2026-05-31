@@ -65,7 +65,6 @@ function RegisterForm() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        userId,
         namaSekolah: namaSekolah.trim(),
         slug: slug.trim(),
         email: email.trim(),

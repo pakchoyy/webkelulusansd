@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 
-const SECRET = process.env.ADMIN_SECRET || 'ganti-ini-dengan-secret-kamu'
+const SECRET = process.env.ADMIN_SECRET
+if (!SECRET) throw new Error('ADMIN_SECRET env var is required')
 
 function randomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
