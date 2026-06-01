@@ -29,7 +29,6 @@ export default function PublicPageClient({ school, studentCount }: Props) {
       }
       const script = document.createElement('script')
       script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
-      script.integrity = 'sha256-puJRQ8tLqjEd/P2mamIDMhi3YZdO0/YzJwR8sGQDcOQ='
       script.crossOrigin = 'anonymous'
       script.async = true
       script.onload = () => {
@@ -96,7 +95,7 @@ export default function PublicPageClient({ school, studentCount }: Props) {
       }
     } catch (err) {
       console.error(err)
-      alert('Gagal mengunggah gambar hasil kelulusan. Silakan coba lagi.')
+      alert('Gagal membuat gambar. Silakan coba lagi atau gunakan HP/Chrome.')
     } finally {
       setDownloading(false)
     }
