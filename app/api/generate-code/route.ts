@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 
-const SECRET = process.env.ADMIN_SECRET
-if (!SECRET) throw new Error('ADMIN_SECRET env var is required')
-
 function randomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   const seg = (n: number) => Array.from({ length: n }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
@@ -11,6 +8,11 @@ function randomCode() {
 }
 
 export async function POST(req: NextRequest) {
+  const SECRET = process.env.ADMIN_SECRET
+  if (!SECRET) {
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+  }
+
   const secret = req.nextUrl.searchParams.get('secret')
   if (secret !== SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
