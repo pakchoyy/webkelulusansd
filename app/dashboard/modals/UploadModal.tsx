@@ -11,6 +11,7 @@ export default function UploadModal({ schoolId, onClose }: { schoolId: string; o
   const [errors, setErrors] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState('')
+  const [fileKey, setFileKey] = useState(0)
 
   function downloadTemplate() {
     const data = [
@@ -35,8 +36,7 @@ export default function UploadModal({ schoolId, onClose }: { schoolId: string; o
       setErrors([`Gagal membaca file: ${err.message || 'Format tidak didukung'}`])
       setPreview([])
     }
-    // Reset input agar bisa upload file yang sama lagi
-    e.target.value = ''
+    setFileKey(k => k + 1)
   }
 
   async function handleUpload() {
@@ -94,7 +94,7 @@ export default function UploadModal({ schoolId, onClose }: { schoolId: string; o
         </div>
 
         <div className="relative group">
-          <input type="file" accept=".xlsx,.xls" onChange={handleFile}
+          <input key={fileKey} type="file" accept=".xlsx,.xls" onChange={handleFile}
             className="w-full text-xs border-2 border-dashed border-gray-300 rounded-xl p-6 cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-blue-600 file:text-white file:font-black file:text-xs" />
         </div>
 

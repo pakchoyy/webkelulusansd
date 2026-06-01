@@ -17,6 +17,7 @@ export function parseExcel(file: File): Promise<{ rows: StudentRow[]; errors: st
 
       // Skip baris header (baris 0)
       raw.slice(1).forEach((row, i) => {
+        if (!Array.isArray(row)) return
         const [nisn, nama, kelas, status, pesan] = row.map(c => String(c ?? '').trim())
         const lineNum = i + 2
 
