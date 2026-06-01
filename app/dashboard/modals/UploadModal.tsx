@@ -28,8 +28,15 @@ export default function UploadModal({ schoolId, onClose }: { schoolId: string; o
     const f = e.target.files?.[0]
     if (!f) return
     setResult('')
-    const { rows, errors } = await parseExcel(f)
-    setPreview(rows); setErrors(errors)
+    try {
+      const { rows, errors } = await parseExcel(f)
+      setPreview(rows); setErrors(errors)
+    } catch (err: any) {
+      setErrors([`Gagal membaca file: ${err.message || 'Format tidak didukung'}`])
+      setPreview([])
+    }
+    // Reset input agar bisa upload file yang sama lagi
+    e.target.value = ''
   }
 
   async function handleUpload() {

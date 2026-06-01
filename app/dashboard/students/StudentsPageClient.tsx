@@ -31,6 +31,7 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
   const [successUploadedName, setSuccessUploadedName] = useState<string | null>(null)
   const [showDeleteConfirmFor, setShowDeleteConfirmFor] = useState<{ id: string; name: string; url: string } | null>(null)
   const [showDeleteStudentConfirm, setShowDeleteStudentConfirm] = useState<{ id: string; name: string } | null>(null)
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false)
   const [successDeletedName, setSuccessDeletedName] = useState<string | null>(null)
 
   function triggerSklUpload(studentId: string) {
@@ -173,6 +174,16 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
     setTimeout(() => setMsg(''), 3000)
   }
 
+  async function deleteAllStudents() {
+    setLoading(true)
+    setShowDeleteAllConfirm(false)
+    await supabase.from('students').delete().eq('school_id', schoolId)
+    setStudents([])
+    setLoading(false)
+    setMsg('✅ Semua siswa berhasil dihapus!')
+    setTimeout(() => setMsg(''), 3000)
+  }
+
   const [showUpload, setShowUpload] = useState(false)
 
   const filtered = students.filter(s =>
@@ -255,7 +266,17 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
       </div>
 
       <div className="neo-brutal rounded-2xl bg-white p-5">
-        <h2 className="font-black text-gray-900 mb-3">📋 Daftar Siswa ({students.length})</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-black text-gray-900">📋 Daftar Siswa ({students.length})</h2>
+          {students.length > 0 && (
+            <button
+              onClick={() => setShowDeleteAllConfirm(true)}
+              className="bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-black px-3 py-1.5 rounded-lg transition-colors border-2 border-red-300 flex items-center gap-1"
+            >
+              🗑️ Hapus Semua
+            </button>
+          )}
+        </div>
         <input type="text" value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Cari nama atau NISN..."
           className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 text-sm mb-3 focus:outline-none focus:border-blue-400" />
@@ -372,6 +393,31 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
               <button onClick={() => deleteStudent(showDeleteStudentConfirm.id, showDeleteStudentConfirm.name)}
                 className="flex-1 neo-brutal-sm rounded-xl bg-red-600 text-white font-bold px-4 py-3 hover:bg-red-700 transition-colors">
                 Hapus Siswa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRM DELETE ALL STUDENTS POPUP MODAL */}
+      {showDeleteAllConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="scale-in neo-brutal rounded-3xl bg-white p-6 max-w-sm w-full text-center relative border-2 border-red-500">
+            <div className="w-16 h-16 mx-auto rounded-full neo-brutal bg-red-100 flex items-center justify-center mb-4 mt-2">
+              <span className="text-3xl">⚠️</span>
+            </div>
+            <h3 className="text-xl font-black text-red-700 mb-2">Hapus Semua Siswa?</h3>
+            <p className="text-sm text-gray-600 mb-5 leading-relaxed">
+              Apakah Anda yakin ingin menghapus <strong className="text-red-600">SEMUA ({students.length} siswa)</strong>? Tindakan ini tidak dapat dibatalkan.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setShowDeleteAllConfirm(false)}
+                className="flex-1 neo-brutal-sm rounded-xl bg-white text-gray-900 border-2 border-black font-bold px-4 py-3 hover:bg-gray-100 transition-colors">
+                Batal
+              </button>
+              <button onClick={deleteAllStudents}
+                className="flex-1 neo-brutal-sm rounded-xl bg-red-600 text-white font-bold px-4 py-3 hover:bg-red-700 transition-colors">
+                {loading ? 'Menghapus...' : 'Hapus Semua'}
               </button>
             </div>
           </div>
