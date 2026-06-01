@@ -30,6 +30,7 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
   const [uploadingSklFor, setUploadingSklFor] = useState<string | null>(null)
   const [successUploadedName, setSuccessUploadedName] = useState<string | null>(null)
   const [showDeleteConfirmFor, setShowDeleteConfirmFor] = useState<{ id: string; name: string; url: string } | null>(null)
+  const [showDeleteStudentConfirm, setShowDeleteStudentConfirm] = useState<{ id: string; name: string } | null>(null)
   const [successDeletedName, setSuccessDeletedName] = useState<string | null>(null)
 
   function triggerSklUpload(studentId: string) {
@@ -162,10 +163,14 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
     setTimeout(() => setMsg(''), 3000)
   }
 
-  async function deleteStudent(id: string) {
-    if (!confirm('Hapus siswa ini?')) return
+  async function deleteStudent(id: string, name: string) {
+    setLoading(true)
+    setShowDeleteStudentConfirm(null)
     await supabase.from('students').delete().eq('id', id).eq('school_id', schoolId)
     setStudents(prev => prev.filter(s => s.id !== id))
+    setLoading(false)
+    setMsg(`✅ Siswa "${name}" berhasil dihapus!`)
+    setTimeout(() => setMsg(''), 3000)
   }
 
   const [showUpload, setShowUpload] = useState(false)
@@ -293,7 +298,7 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
 
                   <button onClick={() => fillEdit(s)}
                     className="text-blue-400 hover:text-blue-600 p-1.5 rounded-lg hover:bg-blue-50 transition-colors">✏️</button>
-                  <button onClick={() => deleteStudent(s.id)}
+                  <button onClick={() => setShowDeleteStudentConfirm({ id: s.id, name: s.nama })}
                     className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors">🗑️</button>
                 </div>
               </div>
@@ -348,7 +353,32 @@ export default function StudentsPageClient({ initialStudents, schoolId }: {
         </div>
       )}
 
-      {/* SUCCESS DELETE POPUP MODAL */}
+      {/* CONFIRM DELETE STUDENT POPUP MODAL */}
+      {showDeleteStudentConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="scale-in neo-brutal rounded-3xl bg-white p-6 max-w-sm w-full text-center relative border-2 border-red-500">
+            <div className="w-16 h-16 mx-auto rounded-full neo-brutal bg-red-100 flex items-center justify-center mb-4 mt-2">
+              <span className="text-3xl">🗑️</span>
+            </div>
+            <h3 className="text-xl font-black text-red-700 mb-2">Hapus Siswa?</h3>
+            <p className="text-sm text-gray-600 mb-5 leading-relaxed">
+              Apakah Anda yakin ingin menghapus siswa <strong className="text-blue-600">{showDeleteStudentConfirm.name}</strong>? Tindakan ini tidak dapat dibatalkan.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setShowDeleteStudentConfirm(null)}
+                className="flex-1 neo-brutal-sm rounded-xl bg-white text-gray-900 border-2 border-black font-bold px-4 py-3 hover:bg-gray-100 transition-colors">
+                Batal
+              </button>
+              <button onClick={() => deleteStudent(showDeleteStudentConfirm.id, showDeleteStudentConfirm.name)}
+                className="flex-1 neo-brutal-sm rounded-xl bg-red-600 text-white font-bold px-4 py-3 hover:bg-red-700 transition-colors">
+                Hapus Siswa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SUCCESS DELETE SKL POPUP MODAL */}
       {successDeletedName && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="scale-in neo-brutal rounded-3xl bg-white p-6 max-w-sm w-full text-center relative border-2 border-red-500">
